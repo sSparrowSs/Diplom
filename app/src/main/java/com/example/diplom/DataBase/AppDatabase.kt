@@ -4,17 +4,20 @@ import android.app.Application
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 
-class AppDatabase: Application() {
+class AppDatabase : Application() {
+    lateinit var realm: Realm
+        private set
+
     override fun onCreate() {
         super.onCreate()
-        Realm.init(this) // Инициализация Realm
 
-        // Конфигурация Realm
-        val config = RealmConfiguration.Builder()
-            .name("myrealm.realm") // Имя файла БД
-            .schemaVersion(1) // Версия схемы
+        val config = RealmConfiguration.Builder(
+            schema = setOf(Material::class)
+        )
+            .name("myrealm.realm")
+            .schemaVersion(1)
             .build()
 
-        Realm.setDefaultConfiguration(config)
+        realm = Realm.open(config)
     }
 }

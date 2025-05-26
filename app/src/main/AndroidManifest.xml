@@ -11,9 +11,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Base.Theme.Diplom"
-        tools:targetApi="31">
+        tools:targetApi="35">
+        <activity
+            android:name=".MaterialView"
+            android:theme="@style/Base.Theme.Diplom"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Base.Theme.Diplom"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
