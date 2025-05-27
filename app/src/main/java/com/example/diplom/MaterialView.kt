@@ -11,11 +11,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.transition.Visibility
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.diplom.DataBase.Material
+import com.example.diplom.DataBase.MaterialAdapter
 import com.example.diplom.databinding.ActivityMaterialViewBinding
 
 class MaterialView : AppCompatActivity() {
     private lateinit var binding: ActivityMaterialViewBinding
+    private lateinit var adapter: MaterialAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityMaterialViewBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
@@ -31,8 +34,31 @@ class MaterialView : AppCompatActivity() {
 
         setupSpinner()
 
+        val sampleMaterials = listOf(
+            Material().apply {
+                name = "Бетон"
+                quantity = 5
+                unit = "м³"
+            },
+            Material().apply {
+                name = "Арматура"
+                quantity = 20
+                unit = "шт"
+            },
+            Material().apply {
+                name = "Кирпич"
+                quantity = 1000
+                unit = "шт"
+            }
+        )
+
+
+        adapter = MaterialAdapter(sampleMaterials)
+        binding.ViewMaterial.layoutManager = LinearLayoutManager(this)
+        binding.ViewMaterial.adapter = adapter
+
         binding.Sort.setOnClickListener() {
-            binding.Sort.visibility = INVISIBLE
+
         }
 
     }
