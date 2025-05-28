@@ -44,10 +44,11 @@
                 android:spinnerMode="dropdown" />
 
             <SearchView
+                android:id="@+id/SearchMaterial"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="10dp"
-                android:queryHint="Поиск"
+                android:queryHint="Поиск по названию"
                 android:layout_marginStart="8dp" />
 
         </LinearLayout>
@@ -61,9 +62,10 @@
         android:layout_below="@id/toolbar"
         android:paddingVertical="4dp"
         android:paddingHorizontal="12dp"
-        android:textSize="16dp"
-        android:text="Стены ×"
+        android:textSize="18dp"
+        android:text="ф"
         android:background="@drawable/sort"
+        android:fontFamily="@font/calibri"
         android:layout_marginStart="16dp"
         android:layout_marginTop="6dp"
         android:visibility="visible"/>
@@ -77,16 +79,18 @@
 
     <Button
         android:id="@+id/ButtonCreate"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="25dp"
         android:layout_marginBottom="32dp"
-        android:backgroundTint="@color/whiteGrey"
-        android:gravity="center"
+        android:background="@drawable/button_create"
+        android:textColor="@color/white"
+        android:contentDescription="Создать"
+        android:fontFamily="@font/calibri"
         android:text="+"
-        android:textAlignment="center" />
+        android:textSize="30dp" />
 
     <com.google.android.material.bottomsheet.BottomSheetDragHandleView
         android:layout_width="wrap_content"
@@ -94,9 +98,9 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="190dp"
-        android:layout_marginEnd="173dp"
-        android:layout_marginBottom="123dp" />
-
+        android:layout_marginStart="163dp"
+        android:layout_marginEnd="200dp"
+        android:visibility="gone"
+        android:layout_marginBottom="107dp" />
 
 </RelativeLayout>

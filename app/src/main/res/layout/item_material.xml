@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ViewMaterial"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -7,41 +8,53 @@
     android:background="@drawable/sort"
     android:layout_margin="6dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/nameText"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="6dp"
+        android:fontFamily="@font/calibri"
+        android:paddingStart="10dp"
+        android:text="Название"
+        android:textSize="20dp"
+        android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/nameText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="@font/calibri"
-            android:paddingStart="10dp"
-            android:text="Название"
-            android:textStyle="bold"
-            android:textSize="20dp"/>
+    <TextView
+        android:id="@+id/editMaterial"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="15dp"
+        android:paddingStart="8dp"
+        android:paddingRight="10dp"
+        android:text="✎"
+        android:textSize="30dp" />
 
-        <TextView
-            android:id="@+id/editIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="30dp"
-            android:text="✎"
-            android:paddingRight="10dp"
-            android:paddingStart="8dp"/>
-
-    </LinearLayout>
+    <TextView
+        android:id="@+id/Type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="35dp"
+        android:fontFamily="@font/calibri"
+        android:paddingStart="10dp"
+        android:text="Тип"
+        android:textSize="17dp" />
 
     <TextView
         android:id="@+id/quantityText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="55dp"
         android:fontFamily="@font/calibri"
         android:paddingStart="10dp"
         android:text="Количество"
-        android:textSize="16dp"/>
+        android:textSize="16dp" />
 
-</LinearLayout>
+</RelativeLayout>

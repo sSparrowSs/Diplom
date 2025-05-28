@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.map
 
 class Repository(private val realm: Realm) {
 
-    suspend fun addMaterial(name: String, quantity: Int) {
+    suspend fun addMaterial(name: String, quantity: Int, category: String = "", unit: String = "") {
         realm.write {
             copyToRealm(Material().apply {
-                id = RealmUUID.random().toString()
+                id = RealmUUID.random()
                 this.name = name
                 this.quantity = quantity
+                this.category = category
+                this.unit = unit
             })
         }
     }
@@ -23,10 +25,23 @@ class Repository(private val realm: Realm) {
         return realm.query<Material>().asFlow().map { it.list }
     }
 
-    suspend fun deleteMaterialById(id: String) {
+    suspend fun deleteMaterial(name: String, quantity: Int, category: String, unit: String) {
         realm.write {
-            val material = query<Material>("id == $0", id).first().find()
+            val material = query<Material>().first().find()
             material?.let { delete(it) }
         }
     }
+
+    suspend fun updateMaterial(name: String, quantity: Int, category: String, unit: String) {
+        realm.write {
+            val material = query<Material>().first().find()
+            material?.let {
+                it.name = name
+                it.quantity = quantity
+                it.category = category
+                it.unit = unit
+            }
+        }
+    }
+
 }

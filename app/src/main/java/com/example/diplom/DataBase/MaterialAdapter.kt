@@ -6,7 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.diplom.databinding.ItemMaterialBinding
 
 class MaterialAdapter(
-    private val items: List<Material>
+    private var items: List<Material>,
+    private val onEditClick: (Material) -> Unit
 ) : RecyclerView.Adapter<MaterialAdapter.MaterialViewHolder>() {
 
     inner class MaterialViewHolder(val binding: ItemMaterialBinding) :
@@ -21,9 +22,19 @@ class MaterialAdapter(
         val item = items[position]
         with(holder.binding) {
             nameText.text = item.name
+            Type.text = item.category
             quantityText.text = "${item.quantity} ${item.unit}"
+
+            editMaterial.setOnClickListener {
+                onEditClick(item)
+            }
         }
     }
 
     override fun getItemCount(): Int = items.size
+
+    fun updateData(newItems: List<Material>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
 }
