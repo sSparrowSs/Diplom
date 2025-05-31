@@ -2,6 +2,7 @@ package com.example.diplom
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.AdapterView
@@ -16,11 +17,14 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.diplom.DataBase.Adress
+import com.example.diplom.DataBase.AdressAdapter
 import com.example.diplom.DataBase.Material
 import com.example.diplom.DataBase.MaterialAdapter
 import com.example.diplom.DataBase.Repository
 import com.example.diplom.databinding.ActivityMaterialViewBinding
 import com.example.diplom.databinding.BottomSheetLayoutBinding
+import com.example.diplom.databinding.BottomSheetLayoutMaterialBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
@@ -29,23 +33,25 @@ import kotlinx.coroutines.launch
 
 class MaterialView : AppCompatActivity() {
     private lateinit var binding: ActivityMaterialViewBinding
+    private lateinit var bindingAdress: BottomSheetLayoutMaterialBinding
     private lateinit var adapter: MaterialAdapter
-    private lateinit var config: RealmConfiguration
+    private lateinit var adapterAdress: AdressAdapter
     private lateinit var realm: Realm
     private lateinit var repository: Repository
-
     private val selectedFilters = mutableSetOf<String>()
     private var allMaterials = listOf<Material>()
+    private var allAdress = listOf<Adress>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityMaterialViewBinding.inflate(layoutInflater)
+        bindingAdress = BottomSheetLayoutMaterialBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
         setContentView(binding.root)
 
-        config = RealmConfiguration.Builder(
-            schema = setOf(Material::class)
+        val config = RealmConfiguration.Builder(
+            schema = setOf(Material::class, Adress::class)
         ).build()
 
         realm = Realm.open(config)
@@ -60,15 +66,27 @@ class MaterialView : AppCompatActivity() {
 
         setupSpinner()
 
-        adapter = MaterialAdapter(emptyList()) { material ->
-            showBottomSheetDialogEdit(material)
+        lifecycleScope.launch {
+            val adresses = realm.query(Adress::class).find()
+            adresses.forEach {
+                Log.d("RealmDebug", "Adress: ${it.nameAdress}, Unit: ${it.unitAdress}, Date: ${it.sendDate}")
+            }
+        }
+
+        adapter = MaterialAdapter(emptyList()) {
+            showBottomSheetDialogMaterial()
         }
         binding.ViewMaterial.layoutManager = LinearLayoutManager(this)
         binding.ViewMaterial.adapter = adapter
 
-
+        adapterAdress = AdressAdapter(emptyList()) { adress ->
+            // Обработка клика на элементе
+        }
+        bindingAdress.ViewAdress.layoutManager = LinearLayoutManager(this)
+        bindingAdress.ViewAdress.adapter = adapterAdress
 
         observeMaterials()
+        observeAdress()
 
         binding.SearchMaterial.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
@@ -83,12 +101,23 @@ class MaterialView : AppCompatActivity() {
         }
     }
 
+
     private fun observeMaterials() {
         lifecycleScope.launch {
             repository.getAllMaterials().collectLatest { materials ->
                 allMaterials = materials
                 filterMaterialList(binding.SearchMaterial.query.toString())
             }
+        }
+    }
+
+    private fun observeAdress() {
+        lifecycleScope.launch {
+            repository.getAllAdress().collectLatest { adress ->
+                allAdress = adress
+                adapterAdress.updateData(adress)
+            }
+
         }
     }
 
@@ -139,23 +168,66 @@ class MaterialView : AppCompatActivity() {
         }
     }
 
+    private fun showBottomSheetDialogMaterial() {
+        val dialog = BottomSheetDialog(this)
+        val sheetMaterialBinding = BottomSheetLayoutMaterialBinding.inflate(layoutInflater)
+
+        val testAdresses = listOf(
+            Adress().apply {
+                nameAdress = "ул. Пушкина, д.1"
+                unitAdress = "Цемент"
+                sendDate = "2025-05-27"
+            },
+            Adress().apply {
+                nameAdress = "ул. Ленина, д.2"
+                unitAdress = "Кирпич"
+                sendDate = "2025-05-28"
+            }
+        )
+
+        adapterAdress = AdressAdapter(testAdresses) {
+            Toast.makeText(this, "Нажали на ${it.nameAdress}", Toast.LENGTH_SHORT).show()
+        }
+
+        sheetMaterialBinding.ViewAdress.layoutManager = LinearLayoutManager(this)
+        sheetMaterialBinding.ViewAdress.adapter = adapterAdress
+
+        dialog.setContentView(sheetMaterialBinding.root)
+        dialog.show()
+    }
+
+
+
     private fun showBottomSheetDialog() {
         val dialog = BottomSheetDialog(this)
         val sheetBinding = BottomSheetLayoutBinding.inflate(layoutInflater)
+
         sheetBinding.TextHead.text = "Добавить"
         sheetBinding.DeleteIcon.visibility = View.INVISIBLE
 
         dialog.setContentView(sheetBinding.root)
 
         val categories = listOf("Конструкция", "Отделка", "Утеплители и изоляция", "Электрика", "Крепеж и монтаж", "Сантехника")
+        val post = listOf("Неизвестно", "ЛеруаМерлен", "Петрович", "Оби")
+        val kol = listOf("шт","м", "м²", "м³")
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        val spinnerAdapterPost = ArrayAdapter(this, android.R.layout.simple_spinner_item, post)
+        val spinnerAdapterKol = ArrayAdapter(this, android.R.layout.simple_spinner_item, kol)
+
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerAdapterPost.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerAdapterKol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
         sheetBinding.Category.adapter = spinnerAdapter
+        sheetBinding.Postavshik.adapter = spinnerAdapterPost
+        sheetBinding.TypeKol.adapter = spinnerAdapterKol
 
         sheetBinding.ButtonSave.setOnClickListener {
             val name = sheetBinding.MaterialName.text.toString().trim()
             val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
             val category = sheetBinding.Category.selectedItem.toString()
+            val postavshik = sheetBinding.Postavshik.selectedItem.toString()
+            val typekol = sheetBinding.TypeKol.selectedItem.toString()
 
             if (name.isBlank() || quantityStr.isBlank()) {
                 Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
@@ -169,7 +241,7 @@ class MaterialView : AppCompatActivity() {
             }
 
             lifecycleScope.launch {
-                repository.addMaterial(name, quantity, category, "шт")
+                repository.addMaterial(name, quantity, category, postavshik, typekol)
                 Toast.makeText(this@MaterialView, "Материал сохранён", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
@@ -180,27 +252,43 @@ class MaterialView : AppCompatActivity() {
     private fun showBottomSheetDialogEdit(material: Material) {
         val dialog = BottomSheetDialog(this)
         val sheetBinding = BottomSheetLayoutBinding.inflate(layoutInflater)
-        sheetBinding.TextHead.text = "Изменить"
+
+        sheetBinding.TextHead.text = "Инфомация"
         sheetBinding.ButtonSave.text = "Изменить"
         sheetBinding.DeleteIcon.visibility = View.VISIBLE
 
         dialog.setContentView(sheetBinding.root)
 
         val categories = listOf("Конструкция", "Отделка", "Утеплители и изоляция", "Электрика", "Крепеж и монтаж", "Сантехника")
+        val post = listOf("Неизвестно", "ЛеруаМерлен", "Петрович", "Оби")
+        val kol = listOf("шт","м", "м²", "м³")
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        sheetBinding.Category.adapter = spinnerAdapter
+        val spinnerAdapterPost = ArrayAdapter(this, android.R.layout.simple_spinner_item, post)
+        val spinnerAdapterKol = ArrayAdapter(this, android.R.layout.simple_spinner_item, kol)
 
-        // Предзаполнение полей
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerAdapterPost.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerAdapterKol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        sheetBinding.Category.adapter = spinnerAdapter
+        sheetBinding.Postavshik.adapter = spinnerAdapterPost
+        sheetBinding.TypeKol.adapter = spinnerAdapterKol
         sheetBinding.MaterialName.setText(material.name)
         sheetBinding.MaterialQuantity.setText(material.quantity.toString())
+
         val categoryIndex = categories.indexOf(material.category)
+        val categoryIndexPost = post.indexOf(material.provider)
+        val categoryIndexKol = kol.indexOf(material.unit)
         if (categoryIndex >= 0) sheetBinding.Category.setSelection(categoryIndex)
+        if (categoryIndexPost >= 0) sheetBinding.Postavshik.setSelection(categoryIndexPost)
+        if (categoryIndexKol >= 0) sheetBinding.TypeKol.setSelection(categoryIndexKol)
 
         sheetBinding.ButtonSave.setOnClickListener {
             val name = sheetBinding.MaterialName.text.toString().trim()
             val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
             val category = sheetBinding.Category.selectedItem.toString()
+            val postavshik = sheetBinding.Postavshik.selectedItem.toString()
+            val typekol = sheetBinding.TypeKol.selectedItem.toString()
 
             if (name.isBlank() || quantityStr.isBlank()) {
                 Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
@@ -213,10 +301,12 @@ class MaterialView : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            lifecycleScope.launch {
-                repository.updateMaterial(name, quantity, category, "шт")
-                Toast.makeText(this@MaterialView, "Материал обновлён", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
+            showDeleteConfirmationDialogEdit {
+                lifecycleScope.launch {
+                    repository.updateMaterial(name, quantity, category, postavshik, typekol)
+                    Toast.makeText(this@MaterialView, "Материал обновлён", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
             }
         }
 
@@ -224,13 +314,16 @@ class MaterialView : AppCompatActivity() {
             val name = sheetBinding.MaterialName.text.toString().trim()
             val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
             val category = sheetBinding.Category.selectedItem.toString()
+            val postavshik = sheetBinding.Postavshik.selectedItem.toString()
+            val typekol = sheetBinding.TypeKol.selectedItem.toString()
+
             val quantity = quantityStr.toIntOrNull()
 
             showDeleteConfirmationDialog {
                 lifecycleScope.launch {
                 if (quantity != null) {
 
-                    repository.deleteMaterial(name, quantity, category, "шт")
+                    repository.deleteMaterial(name, quantity, category, postavshik, typekol)
                     Toast.makeText(this@MaterialView, "Материал удален", Toast.LENGTH_SHORT).show()
                 }
                 dialog.dismiss()
@@ -261,7 +354,26 @@ class MaterialView : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun showDeleteConfirmationDialogEdit(onConfirm: () -> Unit) {
+        val dialog = AlertDialog.Builder(ContextThemeWrapper(this, R.style.MyAlertDialogTheme))
+            .setTitle("Изменить материал")
+            .setMessage("Вы уверены, что хотите изменить?")
+            .setPositiveButton("Изменить") { dialogInterface, _ ->
+                onConfirm()
+                dialogInterface.dismiss()
+            }
+            .setNegativeButton("Отмена") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .create()
 
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.GRAY)
+        }
+
+        dialog.show()
+    }
 
     override fun onDestroy() {
         super.onDestroy()

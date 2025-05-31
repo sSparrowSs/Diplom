@@ -11,10 +11,10 @@
 
     <!-- Название материала -->
     <TextView
-        android:id="@+id/nameText"
+        android:id="@+id/textAdress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Название"
+        android:text="Адрес"
         android:textSize="21sp"
         android:textStyle="bold"
         android:fontFamily="@font/calibri"
@@ -39,20 +39,20 @@
         android:id="@+id/typeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Тип: "
+        android:text="Дата отправки: "
         android:textStyle="bold"
         android:textSize="17sp"
         android:fontFamily="@font/calibri"
         android:paddingStart="10dp"
-        app:layout_constraintTop_toBottomOf="@id/nameText"
+        app:layout_constraintTop_toBottomOf="@id/textAdress"
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Тип материала -->
     <TextView
-        android:id="@+id/Type"
+        android:id="@+id/textTime"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Конструкция"
+        android:text="04.12.2025"
         android:textSize="17sp"
         android:fontFamily="@font/calibri"
         android:paddingStart="4dp"
@@ -70,12 +70,12 @@
         android:textSize="17sp"
         android:fontFamily="@font/calibri"
         android:paddingStart="10dp"
-        app:layout_constraintTop_toBottomOf="@id/Type"
+        app:layout_constraintTop_toBottomOf="@id/typeLabel"
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Количество -->
     <TextView
-        android:id="@+id/quantityText"
+        android:id="@+id/textUnit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="4065 шт"
