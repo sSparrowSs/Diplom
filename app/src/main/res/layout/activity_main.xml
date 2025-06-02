@@ -51,8 +51,8 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:fontFamily="@font/calibri"
         android:id="@+id/ButtonLogin"
+        android:fontFamily="@font/calibri"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -65,6 +65,23 @@
         android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/AddProvider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="664dp"
+        android:background="@drawable/button"
+        android:fontFamily="@font/calibri"
+        android:paddingHorizontal="35dp"
+        android:text="Добавить поставщика"
+        android:textColor="@color/white"
+        android:textSize="15dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.85"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

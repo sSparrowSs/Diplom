@@ -13,13 +13,19 @@
         android:theme="@style/Base.Theme.Diplom"
         tools:targetApi="35">
         <activity
-            android:name=".MaterialView"
-            android:theme="@style/Base.Theme.Diplom"
+            android:name=".AddProvider"
             android:exported="false" />
         <activity
+            android:name=".LayoutMaterial"
+            android:exported="false" />
+        <activity
+            android:name=".MaterialView"
+            android:exported="false"
+            android:theme="@style/Base.Theme.Diplom" />
+        <activity
             android:name=".MainActivity"
-            android:theme="@style/Base.Theme.Diplom"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Base.Theme.Diplom">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

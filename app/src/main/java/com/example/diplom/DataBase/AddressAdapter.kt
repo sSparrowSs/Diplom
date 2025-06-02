@@ -7,10 +7,10 @@ import com.example.diplom.databinding.ItemAdressBinding
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class AdressAdapter(
-    private var items: List<Adress>,
-    private val onEditClick: (Adress) -> Unit
-) : RecyclerView.Adapter<AdressAdapter.AdressViewHolder>() {
+class AddressAdapter(
+    private var items: List<SendMaterial>,
+    private val onEditClick: (SendMaterial) -> Unit
+) : RecyclerView.Adapter<AddressAdapter.AdressViewHolder>() {
 
     inner class AdressViewHolder(val binding: ItemAdressBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -23,17 +23,17 @@ class AdressAdapter(
     override fun onBindViewHolder(holder: AdressViewHolder, position: Int) {
         val item = items[position]
         with(holder.binding) {
-            textAdress.text = item.nameAdress.ifEmpty { "Без адреса" }
-            textUnit.text = item.unitAdress.ifEmpty { "Без материала" }
+            textAdress.text = item.nameAddress?.ifBlank { "Без адреса" } ?: "Без адреса"
+            textMaterial.text = item.material?.nameMaterial?.takeIf { it.isNotEmpty() } ?: "Без материала"
+            textUnit.text = if (item.quantity > 0) item.quantity.toString() else "Не известно"
 
             val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             val date = try {
-                formatter.parse(item.sendDate)
+                formatter.parse(item.sentAt)
             } catch (e: Exception) {
                 null
             }
             textTime.text = date?.let { formatter.format(it) } ?: "Без даты"
-
 
             editMaterial.setOnClickListener {
                 onEditClick(item)
@@ -41,10 +41,9 @@ class AdressAdapter(
         }
     }
 
-
     override fun getItemCount(): Int = items.size
 
-    fun updateData(newItems: List<Adress>) {
+    fun updateData(newItems: List<SendMaterial>) {
         items = newItems
         notifyDataSetChanged()
     }

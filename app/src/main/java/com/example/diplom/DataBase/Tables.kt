@@ -1,21 +1,33 @@
 package com.example.diplom.DataBase
 
-import io.realm.kotlin.types.RealmInstant
 import io.realm.kotlin.types.RealmUUID
 import io.realm.kotlin.types.RealmObject
 
-open class Material : RealmObject {
-    var id: RealmUUID = RealmUUID.random()
-    var name: String = ""
-    var quantity: Int = 0
+class Material : RealmObject {
+    var idMaterial: RealmUUID = RealmUUID.random()
+    var nameMaterial: String = ""
     var category: String = ""
-    var provider: String = ""
+    var quantity: Int = 0
     var unit: String = ""
 }
 
-open class Adress : RealmObject {
-    var id: RealmUUID = RealmUUID.random()
-    var nameAdress: String = ""
-    var unitAdress: String = ""
-    var sendDate: String = ""
+class Provider : RealmObject {
+    var idProvider: RealmUUID = RealmUUID.random()
+    var nameProvider: String = ""
+}
+
+class ReceiveMaterial : RealmObject {
+    var idReceiveMaterial: RealmUUID = RealmUUID.random()
+    var provider: Provider? = null
+    var material: Material? = null
+    var quantity: Int = 0
+    var receivedAt: String = ""
+}
+
+class SendMaterial : RealmObject {
+    var idSendMaterial: RealmUUID = RealmUUID.random()
+    var nameAddress: String = ""
+    var material: Material? = null
+    var quantity: Int = 0
+    var sentAt: String = ""
 }

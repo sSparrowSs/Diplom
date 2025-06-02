@@ -21,7 +21,7 @@ class MaterialAdapter(
     override fun onBindViewHolder(holder: MaterialViewHolder, position: Int) {
         val item = items[position]
         with(holder.binding) {
-            nameText.text = item.name
+            nameText.text = item.nameMaterial
             Type.text = item.category
             quantityText.text = "${item.quantity} ${item.unit}"
 
