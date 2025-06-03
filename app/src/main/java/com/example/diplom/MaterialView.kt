@@ -3,6 +3,7 @@ package com.example.diplom
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.AdapterView
@@ -29,8 +30,12 @@ import com.example.diplom.databinding.BottomSheetLayoutBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
+import io.realm.kotlin.notifications.InitialResults
+import io.realm.kotlin.notifications.ResultsChange
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MaterialView : AppCompatActivity() {
     private lateinit var binding: ActivityMaterialViewBinding
@@ -40,6 +45,8 @@ class MaterialView : AppCompatActivity() {
     private lateinit var repository: Repository
     private val selectedFilters = mutableSetOf<String>()
     private var allMaterials = listOf<Material>()
+    fun getReceiveMaterialsFlow() = realm.query(ReceiveMaterial::class).asFlow()
+    fun getMaterialsFlow() = realm.query(Material::class).asFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityMaterialViewBinding.inflate(layoutInflater)
@@ -78,7 +85,8 @@ class MaterialView : AppCompatActivity() {
         binding.ViewMaterial.layoutManager = LinearLayoutManager(this)
         binding.ViewMaterial.adapter = adapter
 
-        observeMaterials()
+        observeMaterialsWithQuantity()
+
 
         binding.SearchMaterial.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
@@ -93,15 +101,52 @@ class MaterialView : AppCompatActivity() {
         }
     }
 
-
-    private fun observeMaterials() {
+    private fun observeMaterialsWithQuantity() {
         lifecycleScope.launch {
-            repository.getAllMaterials().collectLatest { materials ->
-                allMaterials = materials
-                filterMaterialList(binding.SearchMaterial.query.toString())
+            launch {
+                realm.query(ReceiveMaterial::class).asFlow()
+                    .collect { receiveNotification ->
+                        if (receiveNotification is InitialResults || receiveNotification is ResultsChange) {
+                            updateMaterialsWithTotalQuantity()
+                        }
+                    }
+            }
+            launch {
+                realm.query(Material::class).asFlow()
+                    .collect { materialNotification ->
+                        if (materialNotification is InitialResults || materialNotification is ResultsChange) {
+                            updateMaterialsWithTotalQuantity()
+                        }
+                    }
             }
         }
     }
+
+    private suspend fun updateMaterialsWithTotalQuantity() {
+        val materials = realm.query(Material::class).find()
+        val receiveList = realm.query(ReceiveMaterial::class).find()
+
+        val quantityMap = receiveList
+            .groupBy { it.material?.nameMaterial ?: "" }
+            .mapValues { entry -> entry.value.sumOf { it.quantity } }
+
+        val updatedMaterials = materials.map { material ->
+            Material().apply {
+                idMaterial = material.idMaterial
+                nameMaterial = material.nameMaterial
+                category = material.category
+                quantity = quantityMap[material.nameMaterial] ?: 0
+                unit = material.unit
+            }
+        }
+
+        withContext(Dispatchers.Main) {
+            allMaterials = updatedMaterials // <--- ЭТО ОЧЕНЬ ВАЖНО
+            adapter.updateData(updatedMaterials)
+        }
+    }
+
+
 
     private fun filterMaterialList(query: String) {
         val filtered = allMaterials.filter { material ->
@@ -131,9 +176,10 @@ class MaterialView : AppCompatActivity() {
                     selectedFilters.clear()
                     binding.Sort.visibility = View.INVISIBLE
                 } else {
+                    selectedFilters.clear()
                     selectedFilters.add(selected)
                     binding.Sort.visibility = View.VISIBLE
-                    binding.Sort.text = selectedFilters.joinToString(", ") + " ×"
+                    binding.Sort.text = selected
                 }
                 filterMaterialList(binding.SearchMaterial.query.toString())
             }
@@ -167,7 +213,6 @@ class MaterialView : AppCompatActivity() {
         spinnerAdapterKol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         sheetBinding.Category.adapter = spinnerAdapter
-        sheetBinding.TypeKol.adapter = spinnerAdapterKol
 
         sheetBinding.ButtonSave.setOnClickListener {
             val name = sheetBinding.MaterialName.text.toString().trim()

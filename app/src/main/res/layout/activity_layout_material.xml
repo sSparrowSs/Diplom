@@ -31,21 +31,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Внутренний контейнер -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp">
 
-            <!-- Spinner -->
             <Spinner
                 android:id="@+id/SpinnerSortView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:spinnerMode="dropdown" />
 
-            <!-- Заголовки "Получено" / "Отправлено" -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -56,12 +53,15 @@
                 android:paddingHorizontal="8dp">
 
                 <TextView
+                    android:id="@+id/textReceive"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0.95"
                     android:gravity="start"
+                    android:fontFamily="@font/calibri"
                     android:text="Получено"
-                    android:textSize="20sp" />
+                    android:textStyle="bold"
+                    android:textSize="22sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -71,25 +71,46 @@
                     android:paddingHorizontal="8dp" />
 
                 <TextView
+                    android:id="@+id/textSend"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginEnd="10dp"
                     android:text="Отправлено"
-                    android:textSize="20sp" />
+                    android:fontFamily="@font/calibri"
+                    android:textStyle="normal"
+                    android:textSize="22sp" />
             </LinearLayout>
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 
+    <TextView
+        android:id="@+id/ViewAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/sort"
+        android:fontFamily="@font/calibri"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:text="Показать все ?"
+        android:textSize="18sp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/ViewReceiveMaterial"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@color/transparent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/ViewAll" />
 
     <Button
         android:id="@+id/ButtonReceive"
@@ -98,13 +119,13 @@
         android:background="@drawable/button_create"
         android:paddingHorizontal="20dp"
         android:fontFamily="@font/calibri"
-        android:textColor="@color/white"
         android:text="Получить"
+        android:textColor="@color/white"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@id/ButtonSend"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/ButtonSend"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/ButtonSend"
@@ -116,9 +137,9 @@
         android:text="Отправить"
         android:textColor="@color/white"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="25dp"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

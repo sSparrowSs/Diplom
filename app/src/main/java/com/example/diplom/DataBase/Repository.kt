@@ -66,6 +66,10 @@ class Repository(private val realm: Realm) {
         return realm.query<ReceiveMaterial>().asFlow().map { it.list }
     }
 
+    fun getAllSendMaterials(): Flow<List<SendMaterial>> {
+        return realm.query(SendMaterial::class).asFlow().map { it.list }
+    }
+
     fun getAllSendAdress(): Flow<List<SendMaterial>> {
         return realm.query<SendMaterial>().asFlow().map { it.list }
     }
@@ -88,4 +92,80 @@ class Repository(private val realm: Realm) {
             }
         }
     }
+
+    suspend fun getMaterialsWithTotalQuantity(): List<Material> {
+        val materials = realm.query(Material::class).find()
+        val receiveList = realm.query(ReceiveMaterial::class).find()
+
+        // Группируем по имени материала из связанного объекта material
+        val quantityMap = receiveList
+            .groupBy { it.material?.nameMaterial ?: "" }
+            .mapValues { entry -> entry.value.sumOf { it.quantity } }
+
+        return materials.map { material ->
+            val totalQuantity = quantityMap[material.nameMaterial] ?: 0
+
+            Material().apply {
+                idMaterial = material.idMaterial
+                nameMaterial = material.nameMaterial
+                category = material.category
+                quantity = totalQuantity
+                unit = material.unit
+            }
+        }
+    }
+
+    suspend fun updateMaterialReceive(
+        material: ReceiveMaterial,
+        name: String,
+        quantity: Int,
+        providerName: String,
+        date: String
+    ) {
+        realm.write {
+            findLatest(material)?.apply {
+                this.quantity = quantity
+                this.receivedAt = date
+                this.material = query<Material>("nameMaterial == $0", name).first().find()
+                this.provider = if (providerName == "Неизвестно") {
+                    null
+                } else {
+                    query<Provider>("nameProvider == $0", providerName).first().find()
+                }
+            }
+        }
+    }
+
+
+    suspend fun deleteMaterialReceive(material: ReceiveMaterial) {
+        realm.write {
+            findLatest(material)?.let { delete(it) }
+        }
+    }
+
+    suspend fun updateMaterialSend(
+        sendMaterial: SendMaterial,
+        materialName: String,
+        quantity: Int,
+        address: String,
+        date: String
+    ) {
+        realm.write {
+            findLatest(sendMaterial)?.apply {
+                this.quantity = quantity
+                this.nameAddress = address
+                this.sentAt = date
+
+                this.material = query<Material>("nameMaterial == $0", materialName).first().find()
+            }
+        }
+    }
+
+    suspend fun deleteMaterialSend(sendMaterial: SendMaterial) {
+        realm.write {
+            findLatest(sendMaterial)?.let { delete(it) }
+        }
+    }
+
+
 }

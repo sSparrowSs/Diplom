@@ -27,13 +27,23 @@ class ReceiveAdapter(
             textMaterial.text = item.material?.nameMaterial?.takeIf { it.isNotEmpty() } ?: "Без материала"
             textUnit.text = if (item.quantity > 0) item.quantity.toString() else "Не известно"
 
-            val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            val date = try {
-                formatter.parse(item.receivedAt)
-            } catch (e: Exception) {
-                null
-            }
-            textTime.text = date?.let { formatter.format(it) } ?: "Без даты"
+            val dateString = item.receivedAt.ifBlank { null }
+
+            val date = if (dateString != null) {
+                try {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)
+                } catch (e1: Exception) {
+                    try {
+                        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).parse(dateString)
+                    } catch (e2: Exception) {
+                        null
+                    }
+                }
+            } else null
+
+            textTime.text = date?.let {
+                SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(it)
+            } ?: "Без даты"
 
             editMaterial.setOnClickListener {
                 onEditClick(item)
