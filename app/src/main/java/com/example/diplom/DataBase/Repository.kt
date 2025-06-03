@@ -167,5 +167,26 @@ class Repository(private val realm: Realm) {
         }
     }
 
-
+    suspend fun addMaterialSend(
+        name: String,
+        quantity: Int,
+        address: String,
+        type: String,
+        date: String
+    ) {
+        realm.write {
+            val material = query<Material>("nameMaterial == $0", name).first().find()
+            if (material != null) {
+                copyToRealm(
+                    SendMaterial().apply {
+                        this.material = material
+                        this.quantity = quantity
+                        this.nameAddress = address
+                        this.sentAt = date
+                        // при необходимости можно добавить тип единиц измерения
+                    }
+                )
+            }
+        }
+    }
 }

@@ -106,6 +106,10 @@ class LayoutMaterial : AppCompatActivity() {
             binding.ViewAll.visibility = View.INVISIBLE
         }
 
+        binding.ButtonSend.setOnClickListener {
+            showBottomSheetDialogSend()
+        }
+
     }
 
     private fun observeSendMaterials(materialName: String) {
@@ -251,6 +255,91 @@ class LayoutMaterial : AppCompatActivity() {
                 lifecycleScope.launch {
                     repository.addMaterialReceive(name, quantity, postavshik, typekol, selectedDateTime ?: "Без даты")
                     Toast.makeText(this@LayoutMaterial, "Материал сохранён", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+            }
+
+            dialog.show()
+        }
+    }
+
+    private fun showBottomSheetDialogSend() {
+        val dialog = BottomSheetDialog(this)
+        val sheetBinding = BottomSheetRecSendBinding.inflate(layoutInflater)
+        val calendar = Calendar.getInstance()
+        var selectedDateTime: String? = null
+
+        sheetBinding.TextHead.text = "Добавить отправление"
+        sheetBinding.ButtonSave.text = "Отправить"
+        sheetBinding.labelMaterialName.text = "Адрес"
+        sheetBinding.DeleteIcon.visibility = View.INVISIBLE
+
+        sheetBinding.TypeKol.visibility = View.INVISIBLE
+        sheetBinding.Postavshik.visibility = View.INVISIBLE
+        sheetBinding.MaterialSpinner.visibility = View.INVISIBLE
+        sheetBinding.labelPost.visibility = View.INVISIBLE
+
+        sheetBinding.editAddress.visibility = View.VISIBLE
+        sheetBinding.labelMaterialNamee.visibility = View.VISIBLE
+        sheetBinding.MaterialSpinnerr.visibility = View.VISIBLE
+
+        dialog.setContentView(sheetBinding.root)
+
+        sheetBinding.editDate.setOnClickListener {
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePicker = DatePickerDialog(this@LayoutMaterial, { _, selectedYear, selectedMonth, selectedDay ->
+                val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                val minute = calendar.get(Calendar.MINUTE)
+
+                val timePicker = TimePickerDialog(this@LayoutMaterial, { _, selectedHour, selectedMinute ->
+                    selectedDateTime = String.format(
+                        "%02d.%02d.%d %02d:%02d",
+                        selectedDay, selectedMonth + 1, selectedYear,
+                        selectedHour, selectedMinute
+                    )
+                    sheetBinding.editDate.setText(selectedDateTime)
+                }, hour, minute, true)
+
+                timePicker.show()
+            }, year, month, day)
+
+            datePicker.show()
+        }
+
+        lifecycleScope.launch {
+            val materialNames = realm.query(Material::class).find().map { it.nameMaterial }
+            val spinnerAdapterMaterial = ArrayAdapter(this@LayoutMaterial, android.R.layout.simple_spinner_item, materialNames)
+            spinnerAdapterMaterial.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            sheetBinding.MaterialSpinnerr.adapter = spinnerAdapterMaterial
+
+            sheetBinding.ButtonSave.setOnClickListener {
+                val name = sheetBinding.MaterialSpinnerr.selectedItem?.toString()?.trim() ?: ""
+                val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
+                val address = sheetBinding.editAddress.text.toString().trim()
+
+                if (name.isBlank() || quantityStr.isBlank() || address.isBlank()) {
+                    Toast.makeText(this@LayoutMaterial, "Заполните все поля", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val quantity = quantityStr.toIntOrNull()
+                if (quantity == null || quantity <= 0) {
+                    Toast.makeText(this@LayoutMaterial, "Некорректное количество", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                lifecycleScope.launch {
+                    repository.addMaterialSend(
+                        name = name,
+                        quantity = quantity,
+                        address = address,
+                        type = "",
+                        date = selectedDateTime ?: "Без даты"
+                    )
+                    Toast.makeText(this@LayoutMaterial, "Отправление сохранено", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
             }
