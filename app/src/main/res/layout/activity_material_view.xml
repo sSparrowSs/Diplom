@@ -70,13 +70,44 @@
         android:layout_marginTop="6dp"
         android:visibility="visible"/>
 
+    <!-- Верхняя линия -->
+    <TextView
+        android:id="@+id/LineTop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Sort"
+        android:fontFamily="@font/calibri"
+        android:gravity="center"
+        android:textColor="@color/whiteGrey"
+        android:layout_marginTop="-15dp"
+        android:text="______________________________________"
+        android:textSize="18dp"
+        android:visibility="visible" />
+
+    <!-- RecyclerView между двумя линиями -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/ViewMaterial"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/Sort"
-        android:background="@color/transparent"
-        android:layout_marginTop="0dp" />
+        android:layout_height="0dp"
+        android:layout_marginBottom="-15dp"
+        android:layout_below="@id/LineTop"
+        android:layout_above="@id/LineBottom"
+        android:background="@color/transparent" />
+
+    <!-- Нижняя линия -->
+    <TextView
+        android:id="@+id/LineBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/ButtonCreate"
+        android:layout_marginBottom="5dp"
+        android:fontFamily="@font/calibri"
+        android:gravity="center"
+        android:text="______________________________________"
+        android:textColor="@color/whiteGrey"
+        android:textSize="18dp"
+        android:visibility="visible" />
+
 
     <Button
         android:id="@+id/ButtonCreate"

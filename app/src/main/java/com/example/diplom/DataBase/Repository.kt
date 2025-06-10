@@ -21,32 +21,20 @@ class Repository(private val realm: Realm) {
         }
     }
 
-    suspend fun addProvider(name: String) {
-        realm.write {
-            copyToRealm(Provider().apply {
-                idProvider = RealmUUID.random()
-                this.nameProvider = name
-            })
-        }
-    }
-
     suspend fun addMaterialReceive(name: String, quantity: Int, providerName: String = "", unit: String = "", time: String) {
         realm.write {
-            // Найти или создать Provider
             val existingProvider = query<Provider>("nameProvider == $0", providerName).first().find()
             val provider = existingProvider ?: copyToRealm(Provider().apply {
                 nameProvider = providerName
             })
 
-            // Найти или создать Material
             val existingMaterial = query<Material>("nameMaterial == $0", name).first().find()
             val material = existingMaterial ?: copyToRealm(Material().apply {
                 nameMaterial = name
-                category = "" // или задай нужную категорию
+                category = ""
                 this.unit = unit
             })
 
-            // Создание ReceiveMaterial
             copyToRealm(ReceiveMaterial().apply {
                 idReceiveMaterial = RealmUUID.random()
                 this.material = material
@@ -57,62 +45,12 @@ class Repository(private val realm: Realm) {
         }
     }
 
-
-    fun getAllMaterials(): Flow<List<Material>> {
-        return realm.query<Material>().asFlow().map { it.list }
-    }
-
     fun getAllReceiveMaterials(): Flow<List<ReceiveMaterial>> {
         return realm.query<ReceiveMaterial>().asFlow().map { it.list }
     }
 
     fun getAllSendMaterials(): Flow<List<SendMaterial>> {
         return realm.query(SendMaterial::class).asFlow().map { it.list }
-    }
-
-    fun getAllSendAdress(): Flow<List<SendMaterial>> {
-        return realm.query<SendMaterial>().asFlow().map { it.list }
-    }
-
-    suspend fun deleteMaterial(name: String, quantity: Int, category: String, unit: String) {
-        realm.write {
-            val material = query<Material>().first().find()
-            material?.let { delete(it) }
-        }
-    }
-
-    suspend fun updateMaterial(name: String, quantity: Int, category: String, unit: String) {
-        realm.write {
-            val material = query<Material>().first().find()
-            material?.let {
-                it.nameMaterial = name
-                it.quantity = quantity
-                it.category = category
-                it.unit = unit
-            }
-        }
-    }
-
-    suspend fun getMaterialsWithTotalQuantity(): List<Material> {
-        val materials = realm.query(Material::class).find()
-        val receiveList = realm.query(ReceiveMaterial::class).find()
-
-        // Группируем по имени материала из связанного объекта material
-        val quantityMap = receiveList
-            .groupBy { it.material?.nameMaterial ?: "" }
-            .mapValues { entry -> entry.value.sumOf { it.quantity } }
-
-        return materials.map { material ->
-            val totalQuantity = quantityMap[material.nameMaterial] ?: 0
-
-            Material().apply {
-                idMaterial = material.idMaterial
-                nameMaterial = material.nameMaterial
-                category = material.category
-                quantity = totalQuantity
-                unit = material.unit
-            }
-        }
     }
 
     suspend fun updateMaterialReceive(
@@ -135,7 +73,6 @@ class Repository(private val realm: Realm) {
             }
         }
     }
-
 
     suspend fun deleteMaterialReceive(material: ReceiveMaterial) {
         realm.write {
@@ -183,7 +120,6 @@ class Repository(private val realm: Realm) {
                         this.quantity = quantity
                         this.nameAddress = address
                         this.sentAt = date
-                        // при необходимости можно добавить тип единиц измерения
                     }
                 )
             }

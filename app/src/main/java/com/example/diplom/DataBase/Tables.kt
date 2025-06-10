@@ -11,6 +11,12 @@ class Material : RealmObject {
     var unit: String = ""
 }
 
+class Users : RealmObject {
+    var idUser: RealmUUID = RealmUUID.random()
+    var loginUser: String = ""
+    var passwordUser: String = ""
+}
+
 class Provider : RealmObject {
     var idProvider: RealmUUID = RealmUUID.random()
     var nameProvider: String = ""

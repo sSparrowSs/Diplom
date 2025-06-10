@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -15,6 +16,7 @@ import com.example.diplom.DataBase.Material
 import com.example.diplom.DataBase.Provider
 import com.example.diplom.DataBase.ReceiveMaterial
 import com.example.diplom.DataBase.SendMaterial
+import com.example.diplom.DataBase.Users
 import com.example.diplom.databinding.ActivityMainBinding
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
@@ -42,24 +44,58 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Создаём конфигурацию Realm
         config = RealmConfiguration.Builder(
-            schema = setOf(Material::class, Provider::class, ReceiveMaterial::class, SendMaterial::class)
+            schema = setOf(Material::class, Provider::class, ReceiveMaterial::class, SendMaterial::class, Users::class)
         ).build()
         realm = Realm.open(config)
 
-        // 👇 Добавляем провайдеров один раз
         insertDefaultProviders()
         insertDefaultMaterial()
         insertDefaultAdress()
         insertDefaultReceiveMaterial()
+        insertDefaultUser()
 
-        binding.ButtonLogin.setOnClickListener {
-            startActivity(Intent(this@MainActivity, MaterialView::class.java))
+        binding.textInsertAccount.setOnClickListener {
+            binding.UserLogin.setText("User")
+            binding.UserPassword.setText("AH_IO0wxUF")
         }
 
-        binding.AddProvider.setOnClickListener {
-            startActivity(Intent(this@MainActivity, AddProvider::class.java))
+        binding.ButtonLogin.setOnClickListener {
+            val loginInput = binding.UserLogin.text.toString().trim()
+            val passwordInput = binding.UserPassword.text.toString().trim()
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                val user = realm.query<Users>(
+                    "loginUser == $0 AND passwordUser == $1",
+                    loginInput, passwordInput
+                ).first().find()
+
+                if (user != null) {
+                    startActivity(Intent(this@MainActivity, MaterialView::class.java))
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Неверный логин или пароль",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun insertDefaultUser() {
+        CoroutineScope(Dispatchers.IO).launch {
+            realm.write {
+                val existing = this.query<Users>().find()
+                delete(existing)
+
+                copyToRealm(Users().apply {
+                    loginUser = "User"
+                    passwordUser = "AH_IO0wxUF"
+                })
+            }
         }
     }
 
@@ -67,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             realm.write {
                 val existing = this.query<Provider>().find()
-                delete(existing) // Удаляем старые записи
+                delete(existing)
 
                 val providerNames = listOf("Неизвестно", "ЛеруаМерлен", "Петрович", "Оби")
                 providerNames.forEach { name ->
@@ -79,12 +115,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun insertDefaultMaterial() {
         CoroutineScope(Dispatchers.IO).launch {
             realm.write {
                 val existing = this.query<Material>().find()
-                delete(existing) // Удаляем старые записи
+                delete(existing)
 
                 val materials = listOf(
                     Material().apply {
@@ -116,6 +151,18 @@ class MainActivity : AppCompatActivity() {
                         category = "Сантехника"
                         quantity = 50
                         unit = "м"
+                    },
+                    Material().apply {
+                        nameMaterial = "OSB плита"
+                        category = "Конструкция"
+                        quantity = 100
+                        unit = "м²"
+                    },
+                    Material().apply {
+                        nameMaterial = "Грунтовка Ceresit"
+                        category = "Отделка"
+                        quantity = 40
+                        unit = "шт"
                     }
                 )
                 materials.forEach { copyToRealm(it) }
@@ -127,31 +174,54 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             realm.write {
                 val existing = this.query<ReceiveMaterial>().find()
-                delete(existing)  // Удаляем старые записи
+                delete(existing)
 
-                // Для примера берем первые записи провайдеров и материалов из базы, чтобы связать
                 val providers = this.query<Provider>().find()
                 val materials = this.query<Material>().find()
 
                 if (providers.isNotEmpty() && materials.isNotEmpty()) {
                     val receiveMaterials = listOf(
                         ReceiveMaterial().apply {
-                            provider = providers[1]
+                            provider = providers[1 % providers.size]
                             material = materials[0]
-                            quantity = 50
+                            quantity = 79124
                             receivedAt = "01.06.2025"
                         },
                         ReceiveMaterial().apply {
                             provider = providers[2 % providers.size]
-                            material = materials[1 % materials.size]
-                            quantity = 10
+                            material = materials[1]
+                            quantity = 782
                             receivedAt = "02.06.2025"
                         },
                         ReceiveMaterial().apply {
                             provider = providers[3 % providers.size]
-                            material = materials[2 % materials.size]
-                            quantity = 100
+                            material = materials[2]
+                            quantity = 893
                             receivedAt = "03.06.2025"
+                        },
+                        ReceiveMaterial().apply {
+                            provider = providers[2 % providers.size]
+                            material = materials[3]
+                            quantity = 6245
+                            receivedAt = "03.06.2025"
+                        },
+                        ReceiveMaterial().apply {
+                            provider = providers[1 % providers.size]
+                            material = materials[4]
+                            quantity = 12378
+                            receivedAt = "03.06.2025"
+                        },
+                        ReceiveMaterial().apply {
+                            provider = providers[1 % providers.size]
+                            material = materials[5]
+                            quantity = 340
+                            receivedAt = "04.06.2025"
+                        },
+                        ReceiveMaterial().apply {
+                            provider = providers[1 % providers.size]
+                            material = materials[6]
+                            quantity = 150
+                            receivedAt = "04.06.2025"
                         }
                     )
                     receiveMaterials.forEach { copyToRealm(it) }
@@ -163,7 +233,6 @@ class MainActivity : AppCompatActivity() {
     private fun insertDefaultAdress() {
         lifecycleScope.launch(Dispatchers.IO) {
             realm.write {
-                // Удаляем все старые записи SendMaterial
                 val existing = this.query<SendMaterial>().find()
                 delete(existing)
 
@@ -179,18 +248,35 @@ class MainActivity : AppCompatActivity() {
                         },
                         SendMaterial().apply {
                             nameAddress = "Ул. Пушкина 25"
-                            material = materials[1 % materials.size]
+                            material = materials[1]
                             quantity = 7
                             sentAt = "05.06.2025"
                         },
                         SendMaterial().apply {
                             nameAddress = "Ул. Курска 2"
-                            material = materials[2 % materials.size]
+                            material = materials[2]
                             quantity = 64
                             sentAt = "06.06.2025"
+                        },
+                        SendMaterial().apply {
+                            nameAddress = "Новостройка, корпус 1"
+                            material = materials[3]
+                            quantity = 1200
+                            sentAt = "06.06.2025"
+                        },
+                        SendMaterial().apply {
+                            nameAddress = "ул. Ленина 10"
+                            material = materials[4]
+                            quantity = 300
+                            sentAt = "07.06.2025"
+                        },
+                        SendMaterial().apply {
+                            nameAddress = "ул. Архитекторов 9"
+                            material = materials[5]
+                            quantity = 45
+                            sentAt = "07.06.2025"
                         }
                     )
-                    // Добавляем в Realm все записи
                     sendMaterials.forEach { copyToRealm(it) }
                 }
             }

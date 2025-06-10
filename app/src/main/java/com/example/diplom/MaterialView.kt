@@ -45,8 +45,6 @@ class MaterialView : AppCompatActivity() {
     private lateinit var repository: Repository
     private val selectedFilters = mutableSetOf<String>()
     private var allMaterials = listOf<Material>()
-    fun getReceiveMaterialsFlow() = realm.query(ReceiveMaterial::class).asFlow()
-    fun getMaterialsFlow() = realm.query(Material::class).asFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityMaterialViewBinding.inflate(layoutInflater)
@@ -125,27 +123,36 @@ class MaterialView : AppCompatActivity() {
     private suspend fun updateMaterialsWithTotalQuantity() {
         val materials = realm.query(Material::class).find()
         val receiveList = realm.query(ReceiveMaterial::class).find()
+        val sendList = realm.query(SendMaterial::class).find()
 
-        val quantityMap = receiveList
+        val receivedMap = receiveList
+            .groupBy { it.material?.nameMaterial ?: "" }
+            .mapValues { entry -> entry.value.sumOf { it.quantity } }
+
+        val sentMap = sendList
             .groupBy { it.material?.nameMaterial ?: "" }
             .mapValues { entry -> entry.value.sumOf { it.quantity } }
 
         val updatedMaterials = materials.map { material ->
+            val name = material.nameMaterial
+            val received = receivedMap[name] ?: 0
+            val sent = sentMap[name] ?: 0
+            val netQuantity = received - sent
+
             Material().apply {
                 idMaterial = material.idMaterial
-                nameMaterial = material.nameMaterial
+                nameMaterial = name
                 category = material.category
-                quantity = quantityMap[material.nameMaterial] ?: 0
+                quantity = netQuantity.coerceAtLeast(0)
                 unit = material.unit
             }
         }
 
         withContext(Dispatchers.Main) {
-            allMaterials = updatedMaterials // <--- ЭТО ОЧЕНЬ ВАЖНО
+            allMaterials = updatedMaterials
             adapter.updateData(updatedMaterials)
         }
     }
-
 
 
     private fun filterMaterialList(query: String) {
@@ -159,7 +166,6 @@ class MaterialView : AppCompatActivity() {
 
         adapter.updateData(filtered)
     }
-
 
     private fun setupSpinner() {
         val sortOptions = listOf("Все типы", "Конструкция", "Отделка", "Электрика", "Крепеж и монтаж", "Сантехника")
@@ -237,122 +243,6 @@ class MaterialView : AppCompatActivity() {
                 dialog.dismiss()
             }
         }
-        dialog.show()
-    }
-
-    private fun showBottomSheetDialogEdit(material: Material) {
-        val dialog = BottomSheetDialog(this)
-        val sheetBinding = BottomSheetLayoutBinding.inflate(layoutInflater)
-
-        sheetBinding.TextHead.text = "Инфомация"
-        sheetBinding.ButtonSave.text = "Изменить"
-        sheetBinding.DeleteIcon.visibility = View.VISIBLE
-
-        dialog.setContentView(sheetBinding.root)
-
-        val categories = listOf("Конструкция", "Отделка", "Электрика", "Крепеж и монтаж", "Сантехника")
-        val kol = listOf("шт","м", "м²", "м³")
-        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        val spinnerAdapterKol = ArrayAdapter(this, android.R.layout.simple_spinner_item, kol)
-
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerAdapterKol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
-        sheetBinding.Category.adapter = spinnerAdapter
-        sheetBinding.TypeKol.adapter = spinnerAdapterKol
-        sheetBinding.MaterialName.setText(material.nameMaterial)
-        sheetBinding.MaterialQuantity.setText(material.quantity.toString())
-
-        val categoryIndexKol = kol.indexOf(material.unit)
-        if (categoryIndexKol >= 0) sheetBinding.TypeKol.setSelection(categoryIndexKol)
-
-        sheetBinding.ButtonSave.setOnClickListener {
-            val name = sheetBinding.MaterialName.text.toString().trim()
-            val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
-            val category = sheetBinding.Category.selectedItem.toString()
-            val typekol = sheetBinding.TypeKol.selectedItem.toString()
-
-            if (name.isBlank() || quantityStr.isBlank()) {
-                Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val quantity = quantityStr.toIntOrNull()
-            if (quantity == null || quantity <= 0) {
-                Toast.makeText(this, "Некорректное количество", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            showDeleteConfirmationDialogEdit {
-                lifecycleScope.launch {
-                    repository.updateMaterial(name, quantity, category, typekol)
-                    Toast.makeText(this@MaterialView, "Материал обновлён", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                }
-            }
-        }
-
-        sheetBinding.DeleteIcon.setOnClickListener {
-            val name = sheetBinding.MaterialName.text.toString().trim()
-            val quantityStr = sheetBinding.MaterialQuantity.text.toString().trim()
-            val category = sheetBinding.Category.selectedItem.toString()
-            val typekol = sheetBinding.TypeKol.selectedItem.toString()
-
-            val quantity = quantityStr.toIntOrNull()
-
-            showDeleteConfirmationDialog {
-                lifecycleScope.launch {
-                if (quantity != null) {
-
-                    repository.deleteMaterial(name, quantity, category,typekol)
-                    Toast.makeText(this@MaterialView, "Материал удален", Toast.LENGTH_SHORT).show()
-                }
-                dialog.dismiss()
-            } }
-        }
-
-        dialog.show()
-    }
-
-    private fun showDeleteConfirmationDialog(onConfirm: () -> Unit) {
-        val dialog = AlertDialog.Builder(ContextThemeWrapper(this, R.style.MyAlertDialogTheme))
-            .setTitle("Удалить материал")
-            .setMessage("Вы уверены, что хотите удалить?")
-            .setPositiveButton("Удалить") { dialogInterface, _ ->
-                onConfirm()
-                dialogInterface.dismiss()
-            }
-            .setNegativeButton("Отмена") { dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.GRAY)
-        }
-
-        dialog.show()
-    }
-
-    private fun showDeleteConfirmationDialogEdit(onConfirm: () -> Unit) {
-        val dialog = AlertDialog.Builder(ContextThemeWrapper(this, R.style.MyAlertDialogTheme))
-            .setTitle("Изменить материал")
-            .setMessage("Вы уверены, что хотите изменить?")
-            .setPositiveButton("Изменить") { dialogInterface, _ ->
-                onConfirm()
-                dialogInterface.dismiss()
-            }
-            .setNegativeButton("Отмена") { dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.RED)
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(Color.GRAY)
-        }
-
         dialog.show()
     }
 

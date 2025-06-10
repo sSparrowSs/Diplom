@@ -58,14 +58,12 @@ class LayoutMaterial : AppCompatActivity() {
 
         val materialName = intent.getStringExtra("material_name") ?: ""
 
-        // Инициализируем Realm и репозиторий
         val config = RealmConfiguration.Builder(
             schema = setOf(Material::class, Provider::class, ReceiveMaterial::class, SendMaterial::class)
         ).build()
         realm = Realm.open(config)
         repository = Repository(realm)
 
-        // Инициализируем адаптеры с пустыми списками
         adapter = ReceiveAdapter(emptyList()) { receiveMaterial ->
             showBottomSheetDialogEdit(receiveMaterial)
         }
@@ -74,8 +72,6 @@ class LayoutMaterial : AppCompatActivity() {
             showBottomSheetDialogEditSend(sendMaterial)
         }
 
-
-        // Устанавливаем LayoutManager и первый адаптер (например, receive)
         binding.ViewReceiveMaterial.layoutManager = LinearLayoutManager(this)
         binding.ViewReceiveMaterial.adapter = adapter
 
@@ -221,13 +217,11 @@ class LayoutMaterial : AppCompatActivity() {
         sheetBinding.TypeKol.adapter = spinnerAdapterKol
 
         lifecycleScope.launch {
-            // Загружаем имена материалов из базы
             val materialNames = realm.query(Material::class).find().map { it.nameMaterial }
             val spinnerAdapterMaterial = ArrayAdapter(this@LayoutMaterial, android.R.layout.simple_spinner_item, materialNames)
             spinnerAdapterMaterial.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             sheetBinding.MaterialSpinner.adapter = spinnerAdapterMaterial
 
-            // Загружаем поставщиков
             val providers = realm.query(Provider::class).find().map { it.nameProvider }
             val post = listOf("Неизвестно") + providers
 
@@ -356,7 +350,7 @@ class LayoutMaterial : AppCompatActivity() {
         sheetBinding.TextHead.text = "Редактировать получение"
         sheetBinding.ButtonSave.text = "Изменить"
         sheetBinding.DeleteIcon.visibility = View.VISIBLE
-        sheetBinding.TypeKol.visibility = View.GONE // скрываем, так как поля больше нет
+        sheetBinding.TypeKol.visibility = View.GONE
 
         lifecycleScope.launch {
             val materialNames = realm.query(Material::class).find().map { it.nameMaterial }
@@ -415,11 +409,12 @@ class LayoutMaterial : AppCompatActivity() {
         dialog.setContentView(sheetBinding.root)
 
         sheetBinding.TextHead.text = "Редактировать отправку"
+        sheetBinding.labelMaterialName.text = "Адрес"
         sheetBinding.ButtonSave.text = "Изменить"
         sheetBinding.DeleteIcon.visibility = View.VISIBLE
         sheetBinding.TypeKol.visibility = View.GONE
-        sheetBinding.Postavshik.visibility = View.GONE // здесь нет поставщика
-        sheetBinding.MaterialSpinner.visibility = View.INVISIBLE // здесь нет поставщика
+        sheetBinding.Postavshik.visibility = View.GONE
+        sheetBinding.MaterialSpinner.visibility = View.INVISIBLE
         sheetBinding.labelPost.visibility = View.GONE
 
         lifecycleScope.launch {
@@ -434,7 +429,6 @@ class LayoutMaterial : AppCompatActivity() {
             sheetBinding.editDate.setText(sendMaterial.sentAt)
             sheetBinding.MaterialSpinner.setSelection(materialNames.indexOf(materialName).coerceAtLeast(0))
 
-            // Название адреса вместо поставщика
             sheetBinding.editAddress.visibility = View.VISIBLE
             sheetBinding.editAddress.setText(sendMaterial.nameAddress)
 
